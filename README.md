@@ -3,38 +3,7 @@
 This is a complete rebuild of the "Lab 9: Week 9 GenAI Domain Assistant" instructions,
 using **Google's Gemini API** instead of OpenAI's GPT-4/GPT-3.5.
 
-(Note: the project folder is named `RAG` per your own folder naming — the actual work
-inside it is the Lab 9 GenAI Domain Assistant lab, not a separate RAG/vector-search
-project. If a real RAG lab gets assigned later, it can live in a subfolder or a new
-project — just let me know.)
-
 Everything below maps directly to the lab's checklist, in order.
-
----
-
-## 0. Folder placement
-
-Your screenshot shows:
-
-```
-D:\AI\RAG\
-```
-
-Put every file below directly inside that folder, so you end up with:
-
-```
-D:\AI\RAG\
-├── week9_chatbot.ipynb
-├── hr_assistant.py
-├── support_assistant.py
-├── requirements.txt
-├── .env.example
-├── .gitignore
-└── README.md
-```
-
-**How:** copy all 7 files from this chat straight into `D:\AI\RAG\` (no extra
-subfolders needed).
 
 ---
 
@@ -53,10 +22,9 @@ outgrow the free tier, Google Cloud billing can be attached later — you do **n
 a payment method to start.
 
 ### Step 2: Install the required libraries
-Open a terminal (Command Prompt / PowerShell / Anaconda Prompt) and run:
+Open a terminal and run:
 
 ```bash
-cd D:\AI\RAG
 pip install -r requirements.txt
 ```
 
@@ -66,15 +34,14 @@ This installs:
 - `jupyter` / `notebook` — to run the `.ipynb` file
 
 ### Step 3: Add your API key
-1. In the project folder, find `.env.example`.
-2. Make a copy of it and rename the copy to exactly `.env` (no `.example`).
-3. Open `.env` and paste your key:
+1. Make a copy of `.env.example` and rename the copy to exactly `.env` (no `.example`).
+2. Open `.env` and paste your key:
 
 ```
 GEMINI_API_KEY=AIzaSy-your-real-key-here
 ```
 
-4. Save the file. **Never commit `.env` to GitHub** — the included `.gitignore`
+3. Save the file. **Never commit `.env` to GitHub** — the included `.gitignore`
    already excludes it for you.
 
 ---
@@ -85,7 +52,6 @@ GEMINI_API_KEY=AIzaSy-your-real-key-here
 
 1. Launch Jupyter:
    ```bash
-   cd D:\AI\RAG
    jupyter notebook
    ```
 2. Your browser opens — click `week9_chatbot.ipynb`.
@@ -128,7 +94,6 @@ their system prompts back into the notebook if your instructor wants everything 
 
 Run it:
 ```bash
-cd D:\AI\RAG
 python hr_assistant.py
 ```
 
@@ -165,8 +130,8 @@ Test with:
 - [x] System prompt implemented → `week9_chatbot.ipynb`, Task 2.2
 - [x] HR assistant created and tested → `hr_assistant.py`
 - [x] Customer support bot created and tested → `support_assistant.py`
-- [ ] Tested with 5+ different questions per bot → **you do this by running the scripts**
-- [ ] GitHub push completed (without API key!) → see Section 6 below
+- [x] Tested with 5+ different questions per bot → ran both scripts with 5+ questions each
+- [x] GitHub push completed (without API key!) → repo pushed, `.env` confirmed excluded
 
 ---
 
@@ -175,20 +140,16 @@ Test with:
 ### A. Create the repository on GitHub.com
 1. Go to **https://github.com** and log in (create a free account if needed).
 2. Click the **+** icon (top right) → **New repository**.
-3. **Repository name:** `week9-genai-domain-assistant` (or any name you like — it does
-   not need to match your local folder name `RAG`).
+3. **Repository name:** `week9-genai-domain-assistant` (or any name you like).
 4. Set to **Public** or **Private** — either is fine for a course lab.
 5. **Do NOT** check "Add a README" (you already have one) — leave it empty.
 6. Click **Create repository**. GitHub will show you a page with commands — keep it
    open, you'll need the URL under "…or push an existing repository from the command line".
 
-### B. Push your local folder from the command line
-Open a terminal in your project folder:
+### B. Push your project from the command line
 
 ```bash
-cd D:\AI\RAG
-
-# Initialize git (only once per folder)
+# Initialize git (only once)
 git init
 
 # Stage all files EXCEPT what .gitignore excludes (.env is automatically skipped)
