@@ -1,0 +1,24 @@
+IT and Equipment Policy
+
+Equipment Provided:
+All full-time employees receive a company laptop upon starting. Employees may
+choose between a Mac or Windows laptop. Additional equipment such as monitors,
+keyboards, and headsets can be requested through the IT portal.
+
+Software Access:
+Employees are granted access to standard company software (email, Slack, Google
+Workspace) on their first day. Access to specialized tools requires manager
+approval and is provisioned within 2 business days.
+
+Password Policy:
+Passwords must be at least 12 characters long and changed every 90 days.
+Multi-factor authentication (MFA) is required for all company accounts.
+
+VPN and Remote Access:
+Employees working remotely must connect through the company VPN when accessing
+internal systems or sensitive data. VPN credentials are provided during onboarding.
+
+Equipment Return:
+All company equipment must be returned within 5 business days of an employee's
+last working day. Failure to return equipment may result in a deduction from
+final pay, where permitted by local law.

@@ -218,3 +218,182 @@ Model names you can substitute in any script (edit `MODEL_NAME`):
 - **Rate limit / quota errors** → Gemini's free tier has per-minute/per-day limits;
   wait a minute and retry, or check current limits at
   **https://ai.google.dev/gemini-api/docs/rate-limits**.
+
+---
+---
+
+# Week 10 – RAG (Retrieval Augmented Generation) — Gemini Edition
+
+This section covers Lab 10: teaching your chatbot to answer questions from your own
+company documents instead of relying only on what the model already knows. Same
+approach as Week 9 — every OpenAI call is replaced with Gemini.
+
+New files added for this part:
+```
+company_docs/
+├── hr_policy.txt
+├── benefits.txt
+└── it_policy.txt
+week10_rag_system.ipynb
+```
+
+`requirements.txt` was also updated to include the LangChain + Gemini RAG libraries.
+
+---
+
+## 1. Install the new dependencies
+
+The `requirements.txt` file already has everything from Week 9 plus the new RAG
+libraries (`langchain`, `langchain-community`, `langchain-google-genai`, `pypdf`).
+Just re-run:
+
+```bash
+pip install -r requirements.txt
+```
+
+This adds:
+- `langchain` — the framework used to split and orchestrate document Q&A
+- `langchain-core` — provides the `Document` object used to load your files
+- `langchain-text-splitters` — provides `RecursiveCharacterTextSplitter`
+- `langchain-google-genai` — the LangChain ↔ Gemini bridge (`ChatGoogleGenerativeAI`)
+- `pypdf` — lets you extend this to read PDF files later, if you want to
+
+Your existing `.env` file with `GEMINI_API_KEY` is reused — no new key needed.
+
+> **Note:** the lab's original instructions use `langchain_community.document_loaders`
+> (`DirectoryLoader`, `TextLoader`) to read the `.txt` files. That package has since
+> been announced for sunset by the LangChain team, so this version instead loads files
+> with a few lines of plain Python and wraps each one in a `langchain_core.documents.Document`
+> object — same end result, but without depending on a deprecated package.
+
+---
+
+## 2. Sample company documents
+
+Three sample policy files are already provided in `company_docs/`:
+- `hr_policy.txt` — vacation, remote work, parental leave, sick leave, reviews
+- `benefits.txt` — health insurance, 401(k), wellness stipend, professional development
+- `it_policy.txt` — equipment, software access, passwords, VPN, equipment return
+
+You can edit these freely or add more `.txt` files to the folder — the notebook loads
+every `.txt` file it finds there automatically.
+
+---
+
+## 3. Part 1: Document Loading
+
+**File to open:** `week10_rag_system.ipynb`
+
+1. Launch Jupyter (same as before — via `jupyter notebook` or your `open_jupyter.bat`
+   shortcut).
+2. Open `week10_rag_system.ipynb`.
+3. Run the **Task 1.1: Load Documents** cell — it loads all `.txt` files from
+   `company_docs/` and prints how many documents were found plus a preview.
+4. Run the **Task 1.2: Split into Chunks** cell — it breaks each document into ~500
+   character chunks (with 50-character overlap so context isn't lost at chunk
+   boundaries), and prints 3 sample chunks so you can see what they look like.
+
+---
+
+## 4. Part 2: Simple Retrieval
+
+Still inside the notebook:
+
+1. **Task 2.1 – Build Keyword Search:** run the cell defining `simple_search()`. This
+   is a basic keyword-matching retriever — it scores each chunk by how many times the
+   query's words appear in it, then returns the top matches. Test it with the sample
+   query about vacation policy and confirm it pulls back the right chunk.
+2. **Task 2.2 – Test Different Queries:** run the cell that loops through 3 test
+   queries (vacation days, remote work, parental leave) and prints how many relevant
+   chunks were found for each.
+
+---
+
+## 5. Part 3: RAG Pipeline
+
+1. **Task 3.1 – Build RAG Function:** run the cell that initializes
+   `ChatGoogleGenerativeAI` and defines `rag_query()`. This function does the full
+   retrieve → generate flow: find relevant chunks, stuff them into a prompt as
+   context, and ask Gemini to answer using *only* that context.
+2. **Task 3.2 – Test RAG System:** run the cell testing 4 questions — 3 that are
+   answerable from the docs, and one ("What is the dress code?") that deliberately
+   isn't. Confirm the first 3 get accurate, specific answers and the 4th says the
+   information isn't in the context.
+
+---
+
+## 6. Bonus: With vs. Without RAG
+
+Run the final code cell — it asks Gemini the same vacation-policy question two ways:
+directly (no context, generic answer) and through `rag_query()` (grounded in your
+actual `hr_policy.txt`, correctly says 15 days). This side-by-side comparison is the
+clearest demonstration of what RAG actually buys you.
+
+---
+
+## 7. Deliverables Checklist
+
+- [x] Documents loaded from directory → Task 1.1
+- [x] Text split into chunks (~500 chars each) → Task 1.2
+- [x] Chunk preview showing 3 examples → Task 1.2 output
+- [x] `simple_search()` function working → Task 2.1
+- [x] Tested retrieval with 3+ queries → Task 2.2
+- [x] `rag_query()` function implemented → Task 3.1
+- [x] RAG system answers from documents → Task 3.2
+- [x] Tested with 4+ questions → Task 3.2
+- [x] Handles "not in context" correctly → Task 3.2, dress code question
+- [x] Compared with vs without RAG → Bonus section
+- [x] GitHub push completed → repo updated with company_docs/ and week10_rag_system.ipynb
+
+---
+
+## 8. Push the updated project to GitHub
+
+Your repo already exists from Week 9, so this is just adding the new files to it —
+no need to run `git init` or `git remote add` again.
+
+```bash
+git add .
+git status | findstr .env
+git commit -m "Week 10: RAG system with Gemini + LangChain"
+git push
+```
+
+The `findstr .env` check should print nothing, same as before — confirming your API
+key still isn't part of the commit.
+
+Afterward, refresh your GitHub repo page and confirm you now see the `company_docs/`
+folder (with its 3 `.txt` files) and `week10_rag_system.ipynb` alongside your Week 9
+files.
+
+---
+
+## 9. Gemini vs. OpenAI — RAG-specific reference
+
+| Lab's OpenAI concept | Gemini equivalent used here |
+|---|---|
+| `pip install langchain-openai` | `pip install langchain-google-genai` |
+| `from langchain_openai import ChatOpenAI` | `from langchain_google_genai import ChatGoogleGenerativeAI` |
+| `ChatOpenAI(model='gpt-3.5-turbo', temperature=0)` | `ChatGoogleGenerativeAI(model='gemini-2.5-flash', google_api_key=..., temperature=0)` |
+| `llm.invoke(messages)` | Same method — `llm.invoke(...)` works identically for both |
+| `response.content` | Same — `.content` works identically for both |
+
+Document loading, chunking (`RecursiveCharacterTextSplitter`), and the keyword-search
+retrieval logic are all pure LangChain / Python — they don't touch OpenAI or Gemini at
+all, so that code is completely unchanged from the original lab.
+
+---
+
+## 10. Troubleshooting (RAG-specific)
+
+- **`ModuleNotFoundError: No module named 'langchain_google_genai'`** → run
+  `pip install -r requirements.txt` again.
+- **`Loaded 0 documents`** → confirm `company_docs/` sits in the same folder as
+  `week10_rag_system.ipynb`, and that the `.txt` files are directly inside it (not in
+  a further subfolder).
+- **RAG gives a vague or wrong answer** → try lowering `top_k` in `simple_search()` if
+  irrelevant chunks are diluting the context, or check that your query shares actual
+  keywords with the document text (keyword search only matches literal words — this
+  is exactly the limitation that next week's semantic/embedding-based search fixes).
+- **`API key not valid`** → same fix as Week 9 — double-check `.env` has
+  `GEMINI_API_KEY=...` with no quotes or extra spaces.
