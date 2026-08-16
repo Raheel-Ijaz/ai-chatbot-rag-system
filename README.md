@@ -1,3 +1,17 @@
+# GenAI Course Project — Weeks 9–12
+
+This repository tracks a multi-week Generative AI course project. Every lab uses
+**Google's Gemini API** instead of OpenAI, and each week builds on the previous one
+inside this single repo.
+
+## Contents
+- [Week 9 – GenAI Domain Assistant (Part 1)](#week-9--genai-domain-assistant-part-1--gemini-edition)
+- [Week 10 – RAG (Retrieval Augmented Generation)](#week-10--rag-retrieval-augmented-generation--gemini-edition)
+- Week 11 – *(coming soon)*
+- Week 12 – *(coming soon)*
+
+---
+
 # Week 9 – GenAI Domain Assistant (Part 1) — Gemini Edition
 
 This is a complete rebuild of the "Lab 9: Week 9 GenAI Domain Assistant" instructions,
@@ -140,7 +154,7 @@ Test with:
 ### A. Create the repository on GitHub.com
 1. Go to **https://github.com** and log in (create a free account if needed).
 2. Click the **+** icon (top right) → **New repository**.
-3. **Repository name:** `week9-genai-domain-assistant` (or any name you like).
+3. **Repository name:** `ai-chatbot-rag-system`.
 4. Set to **Public** or **Private** — either is fine for a course lab.
 5. **Do NOT** check "Add a README" (you already have one) — leave it empty.
 6. Click **Create repository**. GitHub will show you a page with commands — keep it
@@ -162,7 +176,7 @@ git status | findstr .env
 git commit -m "Week 9: Gemini-powered domain assistant (HR + Customer Support)"
 
 # Point this folder at your new GitHub repo (replace with YOUR repo URL)
-git remote add origin https://github.com/YOUR-USERNAME/week9-genai-domain-assistant.git
+git remote add origin https://github.com/Raheel-Ijaz/ai-chatbot-rag-system.git
 
 # Rename branch to main (GitHub's default) and push
 git branch -M main
