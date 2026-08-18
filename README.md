@@ -7,7 +7,7 @@ inside this single repo.
 ## Contents
 - [Week 9 – GenAI Domain Assistant (Part 1)](#week-9--genai-domain-assistant-part-1--gemini-edition)
 - [Week 10 – RAG (Retrieval Augmented Generation)](#week-10--rag-retrieval-augmented-generation--gemini-edition)
-- Week 11 – *(coming soon)*
+- [Week 11 – Vector Databases & Semantic Search](#week-11--vector-databases--semantic-search--gemini-edition)
 - Week 12 – *(coming soon)*
 
 ---
@@ -410,4 +410,169 @@ all, so that code is completely unchanged from the original lab.
   keywords with the document text (keyword search only matches literal words — this
   is exactly the limitation that next week's semantic/embedding-based search fixes).
 - **`API key not valid`** → same fix as Week 9 — double-check `.env` has
+  `GEMINI_API_KEY=...` with no quotes or extra spaces.
+
+---
+---
+
+# Week 11 – Vector Databases & Semantic Search — Gemini Edition
+
+This section covers Lab 11: upgrading from exact keyword matching to **semantic
+search** — where the system understands that "PTO" means the same thing as
+"vacation," even though the words are completely different. Same approach as
+before — OpenAI is swapped for Gemini throughout.
+
+New files added for this part:
+```
+week11_semantic_search.ipynb
+chroma_db/          (created automatically the first time you run the notebook)
+```
+
+`requirements.txt` was updated to include `chromadb` and `numpy`.
+
+---
+
+## 1. Install the new dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+This adds:
+- `chromadb` — the vector database that stores embeddings and performs semantic
+  similarity search
+- `numpy` — used for the manual cosine similarity calculation in Part 1
+
+Your existing `.env` file with `GEMINI_API_KEY` is reused — no new key needed. You
+also need the `company_docs/` folder from Week 10 to already exist in this same
+project folder (it should, if you completed Week 10).
+
+---
+
+## 2. Part 1: Embeddings
+
+**File to open:** `week11_semantic_search.ipynb`
+
+1. Run the **Task 1.1: Generate Embeddings** cell — it defines `get_embedding()`,
+   which calls Gemini's `gemini-embedding-001` model and converts text into a list of
+   numbers (a vector). Test it with `'vacation policy'` and confirm you get a long list
+   of numbers back (3072 of them) plus a preview of the first 5.
+2. Run the **Task 1.2: Calculate Similarity** cell — it defines `cosine_similarity()`,
+   a standard formula for measuring how close two vectors are in meaning (1.0 =
+   identical meaning, 0 = unrelated). It then compares `"vacation policy"` against 3
+   other phrases and prints similarity scores.
+
+**What to expect:** `"time off rules"` and `"PTO guidelines"` should score high
+(roughly 0.85–0.95) since they mean the same thing as vacation. `"dress code
+requirements"` should score low (roughly 0.1–0.3) since it's about something
+unrelated. This is the entire point of embeddings — they capture *meaning*, not just
+literal words.
+
+---
+
+## 3. Part 2: ChromaDB Setup
+
+1. **Task 2.1 – Initialize ChromaDB:** run the cell. It creates a `GeminiEmbeddingFunction`
+   class (a small adapter so ChromaDB knows how to turn your text into Gemini
+   embeddings automatically), a persistent ChromaDB client that saves to a local
+   `./chroma_db` folder, and a collection named `company_docs`. You should see
+   `Count: 0` the first time you run it, since nothing's been added yet.
+2. **Task 2.2 – Load and Index Documents:** run the cell. It loads the same 3 policy
+   files from `company_docs/`, splits them into ~500-character chunks (identical
+   logic to Week 10), and adds each chunk to ChromaDB. Behind the scenes, ChromaDB
+   calls your `GeminiEmbeddingFunction` to convert every chunk into a vector before
+   storing it. This step can take 30–60 seconds. Re-running this cell later won't
+   duplicate anything — it checks `collection.count() == 0` first.
+
+---
+
+## 4. Part 3: Semantic RAG
+
+1. **Task 3.1 – Test Vector Search:** run the cell defining `vector_search()`. Test it
+   with 3 queries that deliberately use *different words* than the documents:
+   `"time off policy"` (docs say "vacation"), `"WFH guidelines"` (docs say "remote
+   work"), and `"maternity leave"` (docs say "parental leave"). Confirm each one still
+   correctly finds the relevant chunk despite the word mismatch — this is semantic
+   search working as intended.
+2. **Task 3.2 – Build Semantic RAG Pipeline:** run the cell defining `semantic_rag()`,
+   which combines vector search with `ChatGoogleGenerativeAI` (Gemini) to generate a
+   full answer. Test it with 3 questions and confirm the answers are accurate and
+   specific to your documents.
+
+---
+
+## 5. Bonus: Keyword vs. Semantic Comparison
+
+Run the final code cell — it searches for `"PTO policy"` two ways: the old keyword
+search from Week 10 (finds **0 results**, since the literal word "PTO" never appears
+anywhere in your documents) and semantic search (still finds the vacation policy
+chunk, since it understands PTO and vacation mean the same thing). This side-by-side
+is the clearest demonstration of why semantic search is a real upgrade, not just a
+fancier way of doing the same thing.
+
+---
+
+## 6. Deliverables Checklist
+
+- [x] `get_embedding()` function working
+- [x] `cosine_similarity()` function implemented
+- [x] Similarity scores calculated for test phrases
+- [x] ChromaDB client initialized
+- [x] Documents indexed with embeddings
+- [x] `vector_search()` function working
+- [x] Semantic search finds synonyms correctly
+- [x] `semantic_rag()` pipeline implemented
+- [x] Tested with 3+ questions
+- [x] Comparison: keyword vs semantic completed
+- [x] GitHub push completed
+
+---
+
+## 7. Push the updated project to GitHub
+
+```bash
+git add .
+git status | findstr .env
+git commit -m "Week 11: Semantic search with Gemini embeddings + ChromaDB"
+git push
+```
+
+The `findstr .env` check should print nothing, same as every previous week —
+confirming your API key still isn't part of the commit. Note: the `chroma_db/` folder
+that gets created locally contains your indexed vector database — it's fine to push
+it (there's nothing secret in it), but if you'd rather keep the repo lighter, you can
+add `chroma_db/` to your `.gitignore` instead and let each person regenerate it
+locally by re-running Task 2.2.
+
+---
+
+## 8. Gemini vs. OpenAI — semantic search reference
+
+| Lab's OpenAI concept | Gemini equivalent used here |
+|---|---|
+| `client.embeddings.create(model='text-embedding-ada-002', input=text)` | `client.models.embed_content(model='gemini-embedding-001', contents=text, config=...)` |
+| `response.data[0].embedding` | `result.embeddings[0].values` |
+| `embedding_functions.OpenAIEmbeddingFunction(...)` | Custom `GeminiEmbeddingFunction` class (defined in the notebook) |
+| `from langchain_openai import ChatOpenAI` | `from langchain_google_genai import ChatGoogleGenerativeAI` |
+| Embedding vector length: 1536 | Embedding vector length: 3072 |
+
+`chromadb`, `cosine_similarity()`, and the overall retrieve → generate pipeline
+structure are unchanged — only the embedding model and chat model providers differ.
+
+---
+
+## 9. Troubleshooting (Semantic search-specific)
+
+- **`ModuleNotFoundError: No module named 'chromadb'`** → run
+  `pip install -r requirements.txt` again.
+- **Very slow on Task 2.2** → this is normal the first time (generating embeddings for
+  every chunk takes real API calls); it should be fast on every subsequent run since
+  the collection is already populated.
+- **`Collection already has N documents` but you changed your `.txt` files** →
+  ChromaDB doesn't auto-update existing chunks. Delete the `chroma_db/` folder
+  entirely and re-run Task 2.1 and 2.2 to rebuild the index from scratch.
+- **Similarity scores look reversed or all similar** → double check you're not
+  accidentally comparing an embedding to itself, and confirm `get_embedding()` is
+  actually being called fresh for each phrase (not reusing a cached value).
+- **`API key not valid`** → same fix as previous weeks — double-check `.env` has
   `GEMINI_API_KEY=...` with no quotes or extra spaces.
