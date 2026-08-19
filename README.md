@@ -400,6 +400,16 @@ all, so that code is completely unchanged from the original lab.
 
 ## 10. Troubleshooting (RAG-specific)
 
+- **`ClientError: 429 RESOURCE_EXHAUSTED` / `You exceeded your current quota`** → this
+  is Google's **free-tier rate limit**, not a bug — the error message tells you the
+  exact number (e.g. `limit: 5` requests per minute for `gemini-2.5-flash`). Running
+  Task 3.2 (4 questions) and then immediately the Bonus cell (1-2 more) in quick
+  succession is enough to hit it. The notebook now includes a `safe_invoke()` helper
+  that automatically waits and retries when this happens, plus a short `time.sleep()`
+  between calls in the test loops — so simply re-running the cell after a few seconds
+  should now succeed on its own. If it still fails after 3 retries, just wait about a
+  minute (quota resets on a rolling basis) and run the cell again. Current limits:
+  **https://ai.google.dev/gemini-api/docs/rate-limits**.
 - **`ModuleNotFoundError: No module named 'langchain_google_genai'`** → run
   `pip install -r requirements.txt` again.
 - **`Loaded 0 documents`** → confirm `company_docs/` sits in the same folder as
