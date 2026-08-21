@@ -8,7 +8,7 @@ inside this single repo.
 - [Week 9 – GenAI Domain Assistant (Part 1)](#week-9--genai-domain-assistant-part-1--gemini-edition)
 - [Week 10 – RAG (Retrieval Augmented Generation)](#week-10--rag-retrieval-augmented-generation--gemini-edition)
 - [Week 11 – Vector Databases & Semantic Search](#week-11--vector-databases--semantic-search--gemini-edition)
-- Week 12 – *(coming soon)*
+- [Week 12 – Production Deployment with Streamlit](#week-12--production-deployment-with-streamlit--gemini-edition)
 
 ---
 
@@ -586,3 +586,156 @@ structure are unchanged — only the embedding model and chat model providers di
   actually being called fresh for each phrase (not reusing a cached value).
 - **`API key not valid`** → same fix as previous weeks — double-check `.env` has
   `GEMINI_API_KEY=...` with no quotes or extra spaces.
+
+---
+---
+
+# Week 12 – Production Deployment with Streamlit — Gemini Edition
+
+This section covers Lab 12: wrapping the semantic RAG pipeline from Week 11 in a
+production-style web UI using **Streamlit**, so the assistant is something anyone can
+open in a browser and use — no notebook, no terminal chat loop. Same approach as every
+other week: OpenAI is swapped for Gemini throughout, and this app calls the *exact*
+`GeminiEmbeddingFunction` and `company_docs` collection already built in
+`week11_semantic_search.ipynb`, so no re-indexing is needed.
+
+New file added for this part:
+```
+app.py
+```
+
+`requirements.txt` was updated to include `streamlit`.
+
+---
+
+## 1. Install the new dependency
+
+```bash
+pip install -r requirements.txt
+```
+
+This adds:
+- `streamlit` — the web framework that turns `app.py` into a browser-based chat UI
+
+Your existing `.env` file with `GEMINI_API_KEY` is reused — no new key needed. You also
+need the `chroma_db/` and `company_docs/` folders from Weeks 10-11 to already exist in
+this same project folder (they should, if you completed those weeks).
+
+---
+
+## 2. Part 1: Run the app
+
+**File:** `app.py`
+
+```bash
+streamlit run app.py
+```
+
+This opens automatically at `http://localhost:8501`. The app:
+- Connects to your existing `./chroma_db` collection (`company_docs`) using the same
+  `GeminiEmbeddingFunction` class from `week11_semantic_search.ipynb` — same embedding
+  model (`gemini-embedding-001`), same `task_type='RETRIEVAL_DOCUMENT'` used for both
+  indexing and querying, so search behaves identically to the notebook.
+- Uses `ChatGoogleGenerativeAI` (`gemini-2.5-flash`) — the same LangChain wrapper used
+  in `semantic_rag()` — to generate answers grounded in the retrieved context.
+
+---
+
+## 3. Part 2: What's in the UI
+
+- **Chat interface** — `st.chat_input` / `st.session_state.messages` maintain full
+  conversation history across turns, same pattern as the Week 9 chatbot loop but in a
+  browser instead of a terminal.
+- **Sidebar** — shows what the assistant can answer, what it's powered by, a live
+  document count (`collection.count()`), a running message count, and a **Clear Chat
+  History** button.
+- **Welcome message** — shown once, before the first question, so a new user knows what
+  to ask.
+- **Loading spinner** — `st.spinner('Searching documents...')` shows while a query runs.
+- **Error handling** — the whole app body is wrapped in `try/except`: a missing
+  `chroma_db` folder gives a clear "run Week 11 first" message instead of a raw
+  traceback, and a missing/invalid API key is caught and explained before anything else
+  runs.
+
+Test it with 5+ questions, same as previous weeks, e.g.:
+- `How much time off do employees get?`
+- `Can I work from home?`
+- `What is the maternity leave policy?`
+- `How does 401(k) matching work?`
+- (add at least one more of your own)
+
+---
+
+## 4. Deliverables Checklist
+
+- [x] Streamlit app running locally
+- [x] Chat interface with message history
+- [x] Session state managing conversation
+- [x] ChromaDB integration working
+- [x] Semantic search retrieving documents
+- [x] RAG generating accurate answers
+- [x] Sidebar with info and stats
+- [x] Loading spinner during search
+- [x] Welcome message displayed
+- [x] Error handling implemented
+- [x] Clear chat button working
+- [x] Tested with 5+ questions
+- [x] GitHub push completed
+
+---
+
+## 5. Push the updated project to GitHub
+
+Your repo already exists from Week 9, so this is just adding the new file to it — no
+need to run `git init` or `git remote add` again.
+
+```bash
+git add .
+git status | findstr .env
+git commit -m "Week 12: Streamlit deployment with Gemini + ChromaDB RAG UI"
+git push
+```
+
+The `findstr .env` check should print nothing, same as every previous week — confirming
+your API key still isn't part of the commit.
+
+Afterward, refresh your GitHub repo page and confirm you now see `app.py` alongside
+`hr_assistant.py`, `support_assistant.py`, and everything from Weeks 9-11.
+
+---
+
+## 6. Gemini vs. OpenAI — Week 12 reference
+
+| Lab's OpenAI concept | Gemini equivalent used here |
+|---|---|
+| `from langchain_openai import ChatOpenAI` | `from langchain_google_genai import ChatGoogleGenerativeAI` |
+| `ChatOpenAI(model='gpt-3.5-turbo', temperature=0)` | `ChatGoogleGenerativeAI(model='gemini-2.5-flash', google_api_key=..., temperature=0)` |
+| `embedding_functions.OpenAIEmbeddingFunction(...)` | Custom `GeminiEmbeddingFunction` class (same one from Week 11) |
+| `llm.invoke(messages)` | Same method — `llm.invoke(prompt)` works identically |
+| `response.content` | Same — `.content` works identically |
+
+`st.session_state`, `st.chat_message`, the sidebar, and all other Streamlit UI code are
+pure Streamlit — they don't touch OpenAI or Gemini at all, so that code is unchanged
+from the original lab.
+
+---
+
+## 7. Troubleshooting (Streamlit-specific)
+
+- **`ModuleNotFoundError: No module named 'streamlit'`** → run
+  `pip install -r requirements.txt` again.
+- **`FileNotFoundError` / "ChromaDB not found" error on launch** → make sure `app.py`
+  sits in the same folder as your existing `chroma_db/` folder (the one built in Week
+  11) — don't move `app.py` into a subfolder by itself.
+- **App loads but answers are generic/wrong** → double-check `COLLECTION_NAME` in
+  `app.py` matches `company_docs`, and that you haven't deleted/rebuilt `chroma_db/`
+  with a different embedding model since Week 11.
+- **Blank browser tab / "connection refused"** → give it a few seconds after running
+  `streamlit run app.py`; if it still doesn't open, manually go to
+  `http://localhost:8501`.
+- **`API key not valid`** → same fix as every previous week — double-check `.env` has
+  `GEMINI_API_KEY=...` with no quotes or extra spaces.
+
+🎉 **Project 3 complete!** Four weeks, one repo: a Gemini-powered conversational
+assistant that went from a single API call (Week 9), to document retrieval (Week 10),
+to real semantic search (Week 11), to a deployable web app (Week 12).

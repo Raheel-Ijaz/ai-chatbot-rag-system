@@ -1,4 +1,4 @@
-# Week 9: GenAI domian
+# Week 9: GenAI domain
 google-genai>=1.0.0
 python-dotenv>=1.0.0
 jupyter>=1.0.0
@@ -14,3 +14,6 @@ pypdf>=5.0.0
 # Week 11: Vector database + semantic search dependencies
 chromadb>=0.5.0
 numpy>=1.26.0
+
+# Week 12: Streamlit deployment
+streamlit>=1.38.0
